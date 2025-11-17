@@ -97,16 +97,6 @@ const Sidebar = () => {
           </ul>
         </nav>
 
-        {/* Nueva Venta Button */}
-        <div className="px-3 pb-4">
-          <button
-            onClick={() => handleNavigation('/ventas/nueva')}
-            className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-primary/30"
-          >
-            Nueva Venta
-          </button>
-        </div>
-
         {/* Footer Actions */}
         <div className="border-t border-white/10 p-3 space-y-1">
           <button

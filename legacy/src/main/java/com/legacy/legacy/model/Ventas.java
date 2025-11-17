@@ -1,5 +1,6 @@
 package com.legacy.legacy.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class Ventas {
     
     @ManyToOne
     @JoinColumn(name = "cliente_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "sucursal"})
     private Contactos cliente;
     
     @Column(nullable = false)
@@ -27,10 +29,12 @@ public class Ventas {
     
     @ManyToOne
     @JoinColumn(name = "metodo_pago_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private MetodosPago metodoPago;
     
     @ManyToOne
     @JoinColumn(name = "sucursal_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Sucursal sucursal;
     
     @Column(name = "total_general", precision = 10, scale = 2, nullable = false)

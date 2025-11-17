@@ -18,11 +18,16 @@ public class VentasServiceImpl implements VentasService {
     
     @Override
     public List<Ventas> findAll() {
-        // Filtrar por sucursal actual
+        // Obtener sucursal actual (null si es admin)
         Integer sucursalId = sucursalService.getSucursalActualId();
-        return ventasRepository.findAll().stream()
-            .filter(v -> v.getSucursal() != null && v.getSucursal().getId().equals(sucursalId))
-            .collect(java.util.stream.Collectors.toList());
+        
+        // Si es admin (sucursalId es null), devolver todas las ventas con relaciones cargadas
+        if (sucursalId == null) {
+            return ventasRepository.findAllWithRelations();
+        }
+        
+        // Si no es admin, filtrar por sucursal usando consulta optimizada
+        return ventasRepository.findAllBySucursalIdWithRelations(sucursalId);
     }
     
     @Override
@@ -31,7 +36,13 @@ public class VentasServiceImpl implements VentasService {
         if (ventaOpt.isPresent()) {
             Ventas venta = ventaOpt.get();
             Integer sucursalId = sucursalService.getSucursalActualId();
-            // Verificar que la venta pertenezca a la sucursal actual
+            
+            // Si es admin (sucursalId es null), permitir acceso a cualquier venta
+            if (sucursalId == null) {
+                return ventaOpt;
+            }
+            
+            // Si no es admin, verificar que la venta pertenezca a la sucursal actual
             if (venta.getSucursal() != null && venta.getSucursal().getId().equals(sucursalId)) {
                 return Optional.of(venta);
             }
@@ -44,7 +55,28 @@ public class VentasServiceImpl implements VentasService {
     public Ventas save(Ventas ventas) {
         // Asignar sucursal automáticamente si no está asignada
         if (ventas.getSucursal() == null) {
-            ventas.setSucursal(sucursalService.getSucursalActual());
+            try {
+                var sucursalActual = sucursalService.getSucursalActual();
+                if (sucursalActual != null) {
+                    ventas.setSucursal(sucursalActual);
+                } else {
+                    // Si no hay sucursal configurada, obtener la primera sucursal activa
+                    var sucursales = sucursalService.listarSucursalesActivas();
+                    if (!sucursales.isEmpty()) {
+                        ventas.setSucursal(sucursales.get(0));
+                    } else {
+                        throw new RuntimeException("No hay sucursales disponibles. Configure una sucursal primero.");
+                    }
+                }
+            } catch (Exception e) {
+                // Si falla, intentar obtener la primera sucursal activa
+                var sucursales = sucursalService.listarSucursalesActivas();
+                if (!sucursales.isEmpty()) {
+                    ventas.setSucursal(sucursales.get(0));
+                } else {
+                    throw new RuntimeException("No hay sucursales disponibles. Configure una sucursal primero.");
+                }
+            }
         }
         return ventasRepository.save(ventas);
     }

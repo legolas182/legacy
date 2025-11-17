@@ -5,6 +5,7 @@ import LoginPage from './features/Auth/pages/LoginPage';
 import DashboardPage from './features/Dashboard/pages/DashboardPage';
 import ContactosPage from './features/Contactos/pages/ContactosPage';
 import VentasPage from './features/Ventas/pages/VentasPage';
+import ProductosPage from './features/Productos/pages/ProductosPage';
 import PrivateRoute from './components/organisms/PrivateRoute/PrivateRoute';
 
 function App() {
@@ -34,6 +35,14 @@ function App() {
             element={
               <PrivateRoute>
                 <VentasPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/productos"
+            element={
+              <PrivateRoute>
+                <ProductosPage />
               </PrivateRoute>
             }
           />

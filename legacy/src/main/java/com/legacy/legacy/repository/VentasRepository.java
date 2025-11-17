@@ -13,6 +13,12 @@ import java.util.List;
 @Repository
 public interface VentasRepository extends JpaRepository<Ventas, Integer> {
     
+    @Query("SELECT v FROM Ventas v LEFT JOIN FETCH v.cliente LEFT JOIN FETCH v.sucursal LEFT JOIN FETCH v.metodoPago ORDER BY v.fecha DESC")
+    List<Ventas> findAllWithRelations();
+    
+    @Query("SELECT v FROM Ventas v LEFT JOIN FETCH v.cliente LEFT JOIN FETCH v.sucursal LEFT JOIN FETCH v.metodoPago WHERE v.sucursal.id = :sucursalId ORDER BY v.fecha DESC")
+    List<Ventas> findAllBySucursalIdWithRelations(@Param("sucursalId") Integer sucursalId);
+    
     @Query("SELECT COALESCE(SUM(v.totalGeneral), 0) FROM Ventas v WHERE CAST(v.fecha AS date) = :fecha")
     BigDecimal sumTotalByFecha(@Param("fecha") LocalDate fecha);
     

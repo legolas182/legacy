@@ -6,6 +6,7 @@ import StatCard from '../../../components/molecules/StatCard/StatCard';
 import Button from '../../../components/atoms/Button/Button';
 import Input from '../../../components/atoms/Input/Input';
 import Spinner from '../../../components/atoms/Spinner/Spinner';
+import NuevaVentaModal from '../components/NuevaVentaModal/NuevaVentaModal';
 
 const VentasPage = () => {
   const [ventas, setVentas] = useState([]);
@@ -13,6 +14,7 @@ const VentasPage = () => {
   const [metodosPago, setMetodosPago] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Filtros
   const [busqueda, setBusqueda] = useState('');
@@ -231,8 +233,7 @@ const VentasPage = () => {
         {/* Header */}
         <div className="flex flex-wrap justify-between items-center gap-4">
           <h2 className="text-white text-3xl font-bold tracking-tight">Gestión de Ventas</h2>
-          <Button onClick={() => alert('Funcionalidad de Nueva Venta próximamente')}>
-            <span className="material-symbols-outlined inline mr-2">add</span>
+          <Button onClick={() => setIsModalOpen(true)}>
             Nueva Venta
           </Button>
         </div>
@@ -466,6 +467,16 @@ const VentasPage = () => {
             </div>
           </div>
         )}
+
+        {/* Modal de Nueva Venta */}
+        <NuevaVentaModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={() => {
+            setIsModalOpen(false);
+            loadData();
+          }}
+        />
       </div>
     </DashboardLayout>
   );

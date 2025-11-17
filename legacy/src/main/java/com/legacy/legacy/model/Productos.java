@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "productos")
@@ -40,5 +41,17 @@ public class Productos {
     @ManyToOne
     @JoinColumn(name = "laboratorio_id")
     private Laboratorios laboratorio;
+    
+    @Column(name = "valor_compra", precision = 10, scale = 2)
+    private BigDecimal valorCompra;
+    
+    @Column(name = "valor_venta", precision = 10, scale = 2)
+    private BigDecimal valorVenta;
+    
+    @Column(name = "utilidad", precision = 10, scale = 2)
+    private BigDecimal utilidad;
+    
+    @Column(name = "iva", precision = 10, scale = 2)
+    private BigDecimal iva;
 }
 
