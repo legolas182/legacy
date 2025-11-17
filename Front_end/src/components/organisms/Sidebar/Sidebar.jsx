@@ -14,6 +14,7 @@ const Sidebar = () => {
     { icon: 'shopping_bag', label: 'Compras', path: '/compras' },
     { icon: 'inventory_2', label: 'Inventario', path: '/inventario' },
     { icon: 'medication', label: 'Productos', path: '/productos' },
+    { icon: 'contacts', label: 'Contactos', path: '/contactos' },
     { icon: 'bar_chart', label: 'Reportes', path: '/reportes' },
     { icon: 'settings', label: 'Configuración', path: '/configuracion' },
   ];
