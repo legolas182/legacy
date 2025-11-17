@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/alertas")
@@ -24,8 +23,8 @@ public class AlertasController {
     
     @GetMapping("/{id}")
     public ResponseEntity<Alertas> getById(@PathVariable Integer id) {
-        Optional<Alertas> alertas = alertasService.findById(id);
-        return alertas.map(ResponseEntity::ok)
+        return alertasService.findById(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -37,20 +36,17 @@ public class AlertasController {
     
     @PutMapping("/{id}")
     public ResponseEntity<Alertas> update(@PathVariable Integer id, @RequestBody Alertas alertas) {
-        if (!alertasService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        alertas.setId(id);
-        return ResponseEntity.ok(alertasService.save(alertas));
+        return alertasService.update(id, alertas)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!alertasService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
+        if (alertasService.deleteById(id)) {
+            return ResponseEntity.noContent().build();
         }
-        alertasService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 }
 

@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/inventario-movimientos")
@@ -24,8 +23,8 @@ public class InventarioMovimientosController {
     
     @GetMapping("/{id}")
     public ResponseEntity<InventarioMovimientos> getById(@PathVariable Integer id) {
-        Optional<InventarioMovimientos> inventarioMovimientos = inventarioMovimientosService.findById(id);
-        return inventarioMovimientos.map(ResponseEntity::ok)
+        return inventarioMovimientosService.findById(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -37,20 +36,17 @@ public class InventarioMovimientosController {
     
     @PutMapping("/{id}")
     public ResponseEntity<InventarioMovimientos> update(@PathVariable Integer id, @RequestBody InventarioMovimientos inventarioMovimientos) {
-        if (!inventarioMovimientosService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        inventarioMovimientos.setId(id);
-        return ResponseEntity.ok(inventarioMovimientosService.save(inventarioMovimientos));
+        return inventarioMovimientosService.update(id, inventarioMovimientos)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!inventarioMovimientosService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
+        if (inventarioMovimientosService.deleteById(id)) {
+            return ResponseEntity.noContent().build();
         }
-        inventarioMovimientosService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 }
 

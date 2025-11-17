@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/roles")
@@ -24,8 +23,8 @@ public class RolesController {
     
     @GetMapping("/{id}")
     public ResponseEntity<Roles> getById(@PathVariable Integer id) {
-        Optional<Roles> roles = rolesService.findById(id);
-        return roles.map(ResponseEntity::ok)
+        return rolesService.findById(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -37,20 +36,17 @@ public class RolesController {
     
     @PutMapping("/{id}")
     public ResponseEntity<Roles> update(@PathVariable Integer id, @RequestBody Roles roles) {
-        if (!rolesService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        roles.setId(id);
-        return ResponseEntity.ok(rolesService.save(roles));
+        return rolesService.update(id, roles)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!rolesService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
+        if (rolesService.deleteById(id)) {
+            return ResponseEntity.noContent().build();
         }
-        rolesService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 }
 

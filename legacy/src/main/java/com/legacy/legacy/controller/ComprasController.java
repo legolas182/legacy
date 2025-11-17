@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/compras")
@@ -24,8 +23,8 @@ public class ComprasController {
     
     @GetMapping("/{id}")
     public ResponseEntity<Compras> getById(@PathVariable Integer id) {
-        Optional<Compras> compras = comprasService.findById(id);
-        return compras.map(ResponseEntity::ok)
+        return comprasService.findById(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -37,20 +36,17 @@ public class ComprasController {
     
     @PutMapping("/{id}")
     public ResponseEntity<Compras> update(@PathVariable Integer id, @RequestBody Compras compras) {
-        if (!comprasService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        compras.setId(id);
-        return ResponseEntity.ok(comprasService.save(compras));
+        return comprasService.update(id, compras)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!comprasService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
+        if (comprasService.deleteById(id)) {
+            return ResponseEntity.noContent().build();
         }
-        comprasService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 }
 

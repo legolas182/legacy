@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/contactos")
@@ -24,8 +23,8 @@ public class ContactosController {
     
     @GetMapping("/{id}")
     public ResponseEntity<Contactos> getById(@PathVariable Integer id) {
-        Optional<Contactos> contactos = contactosService.findById(id);
-        return contactos.map(ResponseEntity::ok)
+        return contactosService.findById(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
@@ -37,20 +36,17 @@ public class ContactosController {
     
     @PutMapping("/{id}")
     public ResponseEntity<Contactos> update(@PathVariable Integer id, @RequestBody Contactos contactos) {
-        if (!contactosService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-        contactos.setId(id);
-        return ResponseEntity.ok(contactosService.save(contactos));
+        return contactosService.update(id, contactos)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (!contactosService.findById(id).isPresent()) {
-            return ResponseEntity.notFound().build();
+        if (contactosService.deleteById(id)) {
+            return ResponseEntity.noContent().build();
         }
-        contactosService.deleteById(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.notFound().build();
     }
 }
 
