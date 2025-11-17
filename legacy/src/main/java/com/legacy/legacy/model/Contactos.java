@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "contactos")
@@ -37,5 +38,27 @@ public class Contactos {
     @ManyToOne
     @JoinColumn(name = "rol_id")
     private Roles rol;
+    
+    // Campos para autenticación
+    @Column(unique = true)
+    private String username;
+    
+    private String password;
+    
+    @Column(nullable = false)
+    private Boolean activo = true;
+    
+    @Column(name = "fecha_creacion")
+    private LocalDateTime fechaCreacion;
+    
+    @Column(name = "ultimo_acceso")
+    private LocalDateTime ultimoAcceso;
+    
+    @PrePersist
+    protected void onCreate() {
+        if (fechaCreacion == null) {
+            fechaCreacion = LocalDateTime.now();
+        }
+    }
 }
 

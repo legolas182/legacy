@@ -1,0 +1,23 @@
+.link {
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.link--default {
+  color: #3b82f6;
+}
+
+.link--default:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.link--muted {
+  color: #64748b;
+}
+
+.link--muted:hover {
+  color: #94a3b8;
+}
+
