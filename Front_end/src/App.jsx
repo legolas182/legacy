@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext/AuthContext';
 import LoginPage from './features/Auth/pages/LoginPage';
 import DashboardPage from './features/Dashboard/pages/DashboardPage';
 import ContactosPage from './features/Contactos/pages/ContactosPage';
+import VentasPage from './features/Ventas/pages/VentasPage';
 import PrivateRoute from './components/organisms/PrivateRoute/PrivateRoute';
 
 function App() {
@@ -25,6 +26,14 @@ function App() {
             element={
               <PrivateRoute>
                 <ContactosPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/ventas"
+            element={
+              <PrivateRoute>
+                <VentasPage />
               </PrivateRoute>
             }
           />
