@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '../../../components/templates/DashboardLayout/DashboardLayout';
+import Header from '../../../components/organisms/Header/Header';
 import StatCard from '../../../components/molecules/StatCard/StatCard';
 import SalesChart from '../../../components/organisms/SalesChart/SalesChart';
 import AlertsPanel from '../../../components/organisms/AlertsPanel/AlertsPanel';
 import TopProductsTable from '../../../components/organisms/TopProductsTable/TopProductsTable';
 import { dashboardService } from '../../../services/dashboardService/dashboardService';
 
-const DashboardPage = () => {
+const NewDashboardPage = () => {
   // eslint-disable-next-line no-unused-vars
   const [dashboardData, setDashboardData] = useState(null);
   // eslint-disable-next-line no-unused-vars
@@ -50,8 +50,12 @@ const DashboardPage = () => {
   ];
 
   return (
-    <DashboardLayout>
-      <div className="w-full max-w-7xl mx-auto">
+    <div className="dark min-h-screen bg-background-dark font-display">
+      <div className="relative flex h-auto min-h-screen w-full flex-col">
+        <Header />
+        
+        <main className="flex flex-1 justify-center p-4 sm:p-6 lg:p-8">
+          <div className="w-full max-w-7xl">
             {/* Page Heading */}
             <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
               <div className="flex flex-col gap-1">
@@ -103,9 +107,11 @@ const DashboardPage = () => {
             {/* Top Products Table */}
             <TopProductsTable />
           </div>
-    </DashboardLayout>
+        </main>
+      </div>
+    </div>
   );
 };
 
-export default DashboardPage;
+export default NewDashboardPage;
 

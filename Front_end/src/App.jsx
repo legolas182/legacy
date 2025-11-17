@@ -5,7 +5,6 @@ import LoginPage from './features/Auth/pages/LoginPage';
 import RegisterPage from './features/Auth/pages/RegisterPage';
 import DashboardPage from './features/Dashboard/pages/DashboardPage';
 import PrivateRoute from './components/organisms/PrivateRoute/PrivateRoute';
-import './App.css';
 
 function App() {
   return (

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './Input.css';
 
 const Input = ({ 
   type = 'text', 
@@ -16,11 +15,11 @@ const Input = ({
   const inputType = isPassword && showPassword ? 'text' : type;
 
   return (
-    <div className="input-wrapper">
-      {icon && <span className="input-icon">{icon}</span>}
+    <div className="relative w-full">
+      {icon && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 flex items-center justify-center pointer-events-none">{icon}</span>}
       <input
         type={inputType}
-        className={`input ${icon ? 'input--with-icon' : ''}`}
+        className={`w-full ${icon ? 'pl-12' : 'pl-4'} ${isPassword ? 'pr-12' : 'pr-4'} py-3.5 bg-slate-800/60 border border-slate-600/50 rounded-lg text-slate-200 text-[15px] transition-all duration-300 outline-none placeholder:text-slate-500 focus:border-primary focus:bg-slate-800/80 focus:shadow-[0_0_0_3px_rgba(81,160,251,0.1)]`}
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -31,7 +30,7 @@ const Input = ({
       {isPassword && (
         <button
           type="button"
-          className="input-toggle-password"
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 p-1 flex items-center justify-center transition-colors hover:text-slate-400"
           onClick={() => setShowPassword(!showPassword)}
         >
           {showPassword ? (

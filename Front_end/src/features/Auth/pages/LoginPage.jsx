@@ -5,7 +5,6 @@ import AuthHeader from '../../../components/molecules/AuthHeader/AuthHeader';
 import FormField from '../../../components/molecules/FormField/FormField';
 import Button from '../../../components/atoms/Button/Button';
 import Link from '../../../components/molecules/Link/Link';
-import './LoginPage.css';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -42,14 +41,14 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-container">
+    <div className="dark min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="bg-slate-800/40 backdrop-blur-2xl border border-slate-700/30 rounded-2xl p-12 w-full max-w-md shadow-2xl">
         <AuthHeader
           title="Bienvenido de nuevo"
           subtitle="Ingrese sus credenciales para acceder al panel de control."
         />
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <FormField
             label="Nombre de Usuario o Correo Electrónico"
             type="text"
@@ -102,17 +101,17 @@ const LoginPage = () => {
             }
           />
 
-          <div className="auth-form-forgot">
+          <div className="text-right -mt-2">
             <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
           </div>
 
-          {error && <div className="auth-form-error">{error}</div>}
+          {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-lg text-sm text-center">{error}</div>}
 
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
 
-          <div className="auth-form-footer">
+          <div className="text-center text-sm text-slate-400">
             <span>¿No tienes una cuenta? </span>
             <Link to="/register">Regístrate</Link>
           </div>
