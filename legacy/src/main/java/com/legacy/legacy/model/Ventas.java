@@ -29,6 +29,10 @@ public class Ventas {
     @JoinColumn(name = "metodo_pago_id")
     private MetodosPago metodoPago;
     
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id", nullable = false)
+    private Sucursal sucursal;
+    
     @Column(name = "total_general", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalGeneral;
     

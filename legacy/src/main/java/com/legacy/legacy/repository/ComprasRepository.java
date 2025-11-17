@@ -24,5 +24,14 @@ public interface ComprasRepository extends JpaRepository<Compras, Integer> {
     
     @Query("SELECT c FROM Compras c WHERE c.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY c.fecha DESC")
     List<Compras> findByFechaBetween(@Param("fechaInicio") LocalDateTime fechaInicio, @Param("fechaFin") LocalDateTime fechaFin);
+    
+    @Query("SELECT c FROM Compras c WHERE c.sucursal.id = :sucursalId AND c.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY c.fecha DESC")
+    List<Compras> findBySucursalIdAndFechaBetween(@Param("sucursalId") Integer sucursalId, @Param("fechaInicio") LocalDateTime fechaInicio, @Param("fechaFin") LocalDateTime fechaFin);
+    
+    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.sucursal.id = :sucursalId AND CAST(c.fecha AS date) = :fecha")
+    BigDecimal sumTotalBySucursalIdAndFecha(@Param("sucursalId") Integer sucursalId, @Param("fecha") LocalDate fecha);
+    
+    @Query("SELECT COALESCE(SUM(c.total), 0) FROM Compras c WHERE c.sucursal.id = :sucursalId AND YEAR(c.fecha) = :year AND MONTH(c.fecha) = :month")
+    BigDecimal sumTotalBySucursalIdAndMonth(@Param("sucursalId") Integer sucursalId, @Param("year") int year, @Param("month") int month);
 }
 

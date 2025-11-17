@@ -13,5 +13,7 @@ public class UserDTO {
     private String username;
     private String email;
     private String rolNombre;
+    private Integer sucursalId;
+    private String sucursalNombre;
 }
 

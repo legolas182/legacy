@@ -39,6 +39,10 @@ public class Contactos {
     @JoinColumn(name = "rol_id")
     private Roles rol;
     
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id")
+    private Sucursal sucursal;
+    
     // Campos para autenticación
     @Column(unique = true)
     private String username;

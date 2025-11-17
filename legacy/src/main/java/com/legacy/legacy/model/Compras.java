@@ -25,6 +25,10 @@ public class Compras {
     @Column(nullable = false)
     private LocalDateTime fecha;
     
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id", nullable = false)
+    private Sucursal sucursal;
+    
     @Column(precision = 10, scale = 2, nullable = false)
     private BigDecimal total;
     

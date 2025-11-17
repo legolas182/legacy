@@ -29,5 +29,14 @@ public interface VentasRepository extends JpaRepository<Ventas, Integer> {
            "FROM Ventas v WHERE v.fecha >= :fechaInicio GROUP BY YEAR(v.fecha), MONTH(v.fecha) " +
            "ORDER BY YEAR(v.fecha), MONTH(v.fecha)")
     List<Object[]> findVentasMensuales(@Param("fechaInicio") LocalDateTime fechaInicio);
+    
+    @Query("SELECT v FROM Ventas v WHERE v.sucursal.id = :sucursalId AND v.fecha BETWEEN :fechaInicio AND :fechaFin ORDER BY v.fecha DESC")
+    List<Ventas> findBySucursalIdAndFechaBetween(@Param("sucursalId") Integer sucursalId, @Param("fechaInicio") LocalDateTime fechaInicio, @Param("fechaFin") LocalDateTime fechaFin);
+    
+    @Query("SELECT COALESCE(SUM(v.totalGeneral), 0) FROM Ventas v WHERE v.sucursal.id = :sucursalId AND CAST(v.fecha AS date) = :fecha")
+    BigDecimal sumTotalBySucursalIdAndFecha(@Param("sucursalId") Integer sucursalId, @Param("fecha") LocalDate fecha);
+    
+    @Query("SELECT COALESCE(SUM(v.totalGeneral), 0) FROM Ventas v WHERE v.sucursal.id = :sucursalId AND YEAR(v.fecha) = :year AND MONTH(v.fecha) = :month")
+    BigDecimal sumTotalBySucursalIdAndMonth(@Param("sucursalId") Integer sucursalId, @Param("year") int year, @Param("month") int month);
 }
 

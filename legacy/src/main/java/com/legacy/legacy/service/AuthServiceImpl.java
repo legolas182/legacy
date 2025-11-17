@@ -21,6 +21,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private RolesRepository rolesRepository;
+    
+    @Autowired
+    private SucursalService sucursalService;
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO request) {
@@ -42,6 +45,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Usuario inactivo");
         }
 
+        // Verificar que el usuario tenga sucursal asignada
+        if (contacto.getSucursal() == null) {
+            throw new RuntimeException("Usuario no tiene sucursal asignada. Contacte al administrador.");
+        }
+
+        // Establecer la sucursal en el contexto global
+        sucursalService.setSucursalActual(contacto.getSucursal().getId());
+
         // Actualizar último acceso
         contacto.setUltimoAcceso(LocalDateTime.now());
         contactosRepository.save(contacto);
@@ -49,13 +60,19 @@ public class AuthServiceImpl implements AuthService {
         // Generar token simple (en producción usa JWT)
         String token = generateSimpleToken(contacto);
 
-        // Crear UserDTO
+        // Crear UserDTO con información de sucursal
         UserDTO userDTO = new UserDTO();
         userDTO.setId(contacto.getId());
         userDTO.setNombre(contacto.getNombre());
         userDTO.setUsername(contacto.getUsername());
         userDTO.setEmail(contacto.getEmail());
         userDTO.setRolNombre(contacto.getRol() != null ? contacto.getRol().getNombre() : "USER");
+        
+        // Incluir información de sucursal
+        if (contacto.getSucursal() != null) {
+            userDTO.setSucursalId(contacto.getSucursal().getId());
+            userDTO.setSucursalNombre(contacto.getSucursal().getNombre());
+        }
 
         return new LoginResponseDTO(token, userDTO);
     }

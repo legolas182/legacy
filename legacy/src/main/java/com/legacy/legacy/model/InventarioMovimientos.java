@@ -23,6 +23,10 @@ public class InventarioMovimientos {
     @JoinColumn(name = "lote_id", nullable = false)
     private Lotes lote;
     
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id", nullable = false)
+    private Sucursal sucursal;
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoMovimiento tipo;

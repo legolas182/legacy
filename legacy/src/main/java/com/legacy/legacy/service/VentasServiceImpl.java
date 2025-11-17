@@ -13,18 +13,39 @@ public class VentasServiceImpl implements VentasService {
     @Autowired
     private VentasRepository ventasRepository;
     
+    @Autowired
+    private SucursalService sucursalService;
+    
     @Override
     public List<Ventas> findAll() {
-        return ventasRepository.findAll();
+        // Filtrar por sucursal actual
+        Integer sucursalId = sucursalService.getSucursalActualId();
+        return ventasRepository.findAll().stream()
+            .filter(v -> v.getSucursal() != null && v.getSucursal().getId().equals(sucursalId))
+            .collect(java.util.stream.Collectors.toList());
     }
     
     @Override
     public Optional<Ventas> findById(Integer id) {
-        return ventasRepository.findById(id);
+        Optional<Ventas> ventaOpt = ventasRepository.findById(id);
+        if (ventaOpt.isPresent()) {
+            Ventas venta = ventaOpt.get();
+            Integer sucursalId = sucursalService.getSucursalActualId();
+            // Verificar que la venta pertenezca a la sucursal actual
+            if (venta.getSucursal() != null && venta.getSucursal().getId().equals(sucursalId)) {
+                return Optional.of(venta);
+            }
+            return Optional.empty();
+        }
+        return Optional.empty();
     }
     
     @Override
     public Ventas save(Ventas ventas) {
+        // Asignar sucursal automáticamente si no está asignada
+        if (ventas.getSucursal() == null) {
+            ventas.setSucursal(sucursalService.getSucursalActual());
+        }
         return ventasRepository.save(ventas);
     }
     

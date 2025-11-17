@@ -21,6 +21,10 @@ public class Lotes {
     @JoinColumn(name = "producto_id", nullable = false)
     private Productos producto;
     
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id", nullable = false)
+    private Sucursal sucursal;
+    
     @Column(name = "numero_lote", nullable = false)
     private String numeroLote;
     

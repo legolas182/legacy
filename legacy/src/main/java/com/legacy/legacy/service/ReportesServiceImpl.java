@@ -34,12 +34,16 @@ public class ReportesServiceImpl implements ReportesService {
     @Autowired
     private InventarioMovimientosRepository inventarioMovimientosRepository;
     
+    @Autowired
+    private SucursalService sucursalService;
+    
     @Override
     public Map<String, Object> getReporteVentas(LocalDate fechaInicio, LocalDate fechaFin) {
         LocalDateTime inicio = fechaInicio.atStartOfDay();
         LocalDateTime fin = fechaFin.atTime(23, 59, 59);
         
-        List<Ventas> ventas = ventasRepository.findByFechaBetween(inicio, fin);
+        Integer sucursalId = sucursalService.getSucursalActualId();
+        List<Ventas> ventas = ventasRepository.findBySucursalIdAndFechaBetween(sucursalId, inicio, fin);
         
         BigDecimal totalGeneral = BigDecimal.ZERO;
         for (Ventas venta : ventas) {
@@ -95,7 +99,8 @@ public class ReportesServiceImpl implements ReportesService {
         LocalDateTime inicio = fechaInicio.atStartOfDay();
         LocalDateTime fin = fechaFin.atTime(23, 59, 59);
         
-        List<Compras> compras = comprasRepository.findByFechaBetween(inicio, fin);
+        Integer sucursalId = sucursalService.getSucursalActualId();
+        List<Compras> compras = comprasRepository.findBySucursalIdAndFechaBetween(sucursalId, inicio, fin);
         
         BigDecimal totalGeneral = BigDecimal.ZERO;
         for (Compras compra : compras) {
@@ -150,12 +155,13 @@ public class ReportesServiceImpl implements ReportesService {
     public Map<String, Object> getReporteInventario(boolean incluirStockBajo, boolean incluirVencimientos) {
         List<Productos> productos = productosRepository.findAll();
         
+        Integer sucursalId = sucursalService.getSucursalActualId();
         BigDecimal valorTotal = BigDecimal.ZERO;
         List<Map<String, Object>> productosList = new ArrayList<>();
         List<Map<String, Object>> lotesProximosVencer = new ArrayList<>();
         
         for (Productos producto : productos) {
-            List<Lotes> lotes = lotesRepository.findByProductoId(producto.getId());
+            List<Lotes> lotes = lotesRepository.findBySucursalIdAndProductoId(sucursalId, producto.getId());
             
             Integer stockTotal = 0;
             for (Lotes lote : lotes) {
@@ -196,7 +202,7 @@ public class ReportesServiceImpl implements ReportesService {
             if (incluirVencimientos) {
                 LocalDate fechaInicio = LocalDate.now();
                 LocalDate fechaFin = fechaInicio.plusDays(30);
-                List<Lotes> proximos = lotesRepository.findProximosVencer(fechaInicio, fechaFin);
+                List<Lotes> proximos = lotesRepository.findProximosVencerBySucursalId(sucursalId, fechaInicio, fechaFin);
                 
                 for (Lotes lote : proximos) {
                     if (lote.getProducto().getId().equals(producto.getId())) {
@@ -227,10 +233,11 @@ public class ReportesServiceImpl implements ReportesService {
     public Map<String, Object> getReporteProductos() {
         List<Productos> productos = productosRepository.findAll();
         
+        Integer sucursalId = sucursalService.getSucursalActualId();
         List<Map<String, Object>> productosList = new ArrayList<>();
         
         for (Productos p : productos) {
-            List<Lotes> lotes = lotesRepository.findByProductoId(p.getId());
+            List<Lotes> lotes = lotesRepository.findBySucursalIdAndProductoId(sucursalId, p.getId());
             
             Integer stockActual = 0;
             for (Lotes lote : lotes) {
@@ -263,11 +270,12 @@ public class ReportesServiceImpl implements ReportesService {
         LocalDate fechaInicio = LocalDate.now();
         LocalDate fechaFin = fechaInicio.plusDays(dias);
         
-        List<Lotes> lotesProximos = lotesRepository.findProximosVencer(fechaInicio, fechaFin);
+        Integer sucursalId = sucursalService.getSucursalActualId();
+        List<Lotes> lotesProximos = lotesRepository.findProximosVencerBySucursalId(sucursalId, fechaInicio, fechaFin);
         List<Lotes> lotesVencidos = new ArrayList<>();
         
         if (incluirVencidos) {
-            lotesVencidos = lotesRepository.findVencidos(fechaInicio);
+            lotesVencidos = lotesRepository.findVencidosBySucursalId(sucursalId, fechaInicio);
         }
         
         List<Map<String, Object>> lotesList = new ArrayList<>();
@@ -322,22 +330,23 @@ public class ReportesServiceImpl implements ReportesService {
         LocalDateTime inicio = fechaInicio.atStartOfDay();
         LocalDateTime fin = fechaFin.atTime(23, 59, 59);
         
+        Integer sucursalId = sucursalService.getSucursalActualId();
         List<InventarioMovimientos> movimientos;
         
         if (tipo != null && !tipo.isEmpty()) {
             try {
                 com.legacy.legacy.model.enums.TipoMovimiento tipoEnum = 
                     com.legacy.legacy.model.enums.TipoMovimiento.valueOf(tipo);
-                movimientos = inventarioMovimientosRepository.findByFechaBetweenAndTipo(inicio, fin, tipoEnum);
+                movimientos = inventarioMovimientosRepository.findBySucursalIdAndFechaBetweenAndTipo(sucursalId, inicio, fin, tipoEnum);
             } catch (IllegalArgumentException e) {
-                movimientos = inventarioMovimientosRepository.findByFechaBetween(inicio, fin);
+                movimientos = inventarioMovimientosRepository.findBySucursalIdAndFechaBetween(sucursalId, inicio, fin);
             }
         } else {
-            movimientos = inventarioMovimientosRepository.findByFechaBetween(inicio, fin);
+            movimientos = inventarioMovimientosRepository.findBySucursalIdAndFechaBetween(sucursalId, inicio, fin);
         }
         
-        Integer totalEntradas = inventarioMovimientosRepository.sumEntradasByFechaBetween(inicio, fin);
-        Integer totalSalidas = inventarioMovimientosRepository.sumSalidasByFechaBetween(inicio, fin);
+        Integer totalEntradas = inventarioMovimientosRepository.sumEntradasBySucursalIdAndFechaBetween(sucursalId, inicio, fin);
+        Integer totalSalidas = inventarioMovimientosRepository.sumSalidasBySucursalIdAndFechaBetween(sucursalId, inicio, fin);
         
         List<Map<String, Object>> movimientosList = new ArrayList<>();
         
