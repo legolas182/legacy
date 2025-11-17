@@ -5,10 +5,6 @@ export const authService = {
     return apiClient.post('/auth/login', credentials);
   },
 
-  register: (userData) => {
-    return apiClient.post('/auth/register', userData);
-  },
-
   logout: () => {
     return apiClient.post('/auth/logout');
   },

@@ -20,8 +20,9 @@ src/
 ├── contexts/               # Contextos de React
 │   └── AuthContext/        # Gestión de autenticación
 ├── features/               # Módulos por funcionalidad
-│   ├── Auth/              # Autenticación (Login, Registro)
-│   └── Dashboard/         # Panel principal
+│   ├── Auth/              # Autenticación (Login)
+│   ├── Dashboard/         # Panel principal
+│   └── Contactos/         # Gestión de contactos y usuarios
 ├── services/               # Servicios de API
 │   ├── api/               # Configuración de Axios
 │   └── authService/       # Servicio de autenticación
@@ -63,9 +64,10 @@ npm test
 
 El frontend incluye un sistema completo de autenticación con:
 - Login de usuarios
-- Registro de nuevos usuarios
 - Protección de rutas privadas
 - Gestión de tokens JWT
+
+**Nota**: Los usuarios son creados por el administrador desde la página de contactos.
 
 ## 🌐 Configuración del Backend
 
@@ -87,8 +89,8 @@ const API_BASE_URL = 'http://localhost:8080/api'; // Cambiar según necesidad
 ## 📄 Páginas Disponibles
 
 - `/login` - Inicio de sesión
-- `/register` - Registro de nuevos usuarios
 - `/dashboard` - Panel principal (requiere autenticación)
+- `/contactos` - Gestión de contactos y usuarios (requiere autenticación)
 
 ## 🛠️ Scripts Disponibles
 

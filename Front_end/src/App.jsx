@@ -2,7 +2,6 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext/AuthContext';
 import LoginPage from './features/Auth/pages/LoginPage';
-import RegisterPage from './features/Auth/pages/RegisterPage';
 import DashboardPage from './features/Dashboard/pages/DashboardPage';
 import ContactosPage from './features/Contactos/pages/ContactosPage';
 import PrivateRoute from './components/organisms/PrivateRoute/PrivateRoute';
@@ -13,7 +12,6 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/dashboard"
             element={

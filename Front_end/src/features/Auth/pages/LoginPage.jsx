@@ -110,11 +110,6 @@ const LoginPage = () => {
           <Button type="submit" fullWidth disabled={loading}>
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
-
-          <div className="text-center text-sm text-slate-400">
-            <span>¿No tienes una cuenta? </span>
-            <Link to="/register">Regístrate</Link>
-          </div>
         </form>
       </div>
     </div>

@@ -49,26 +49,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (userData) => {
-    try {
-      const response = await authService.register(userData);
-      const { token, user: newUser } = response.data;
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(newUser));
-      
-      setUser(newUser);
-      setIsAuthenticated(true);
-      
-      return { success: true };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Error al registrarse' 
-      };
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -81,7 +61,6 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     loading,
     login,
-    register,
     logout,
   };
 
