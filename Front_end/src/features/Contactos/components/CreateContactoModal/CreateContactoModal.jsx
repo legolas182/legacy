@@ -63,34 +63,46 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
-  // Determinar si es empleado (tipo de contacto es EMPLEADO)
+  // Determinar si necesita usuario y contraseña (EMPLEADO o ADMIN)
+  const necesitaUsuario = values.tipoContacto === 'EMPLEADO' || values.tipoContacto === 'ADMIN';
   const isEmpleado = values.tipoContacto === 'EMPLEADO';
+  const isAdmin = values.tipoContacto === 'ADMIN';
 
   // Determinar qué campos mostrar según el tipo de contacto
   const isProveedor = values.tipoContacto === 'PROVEEDOR';
 
-  // Buscar el rol de empleado automáticamente cuando se selecciona tipo EMPLEADO
+  // Buscar y asignar el rol automáticamente según el tipo de contacto
   useEffect(() => {
-    if (isEmpleado && roles.length > 0) {
-      const rolEmpleado = roles.find(rol => 
-        rol.nombre.toUpperCase() === 'EMPLEADO' || 
-        rol.nombre.toUpperCase() === 'EMPLOYEE'
-      );
-      if (rolEmpleado && values.rolId !== rolEmpleado.id.toString()) {
-        setFieldValue('rolId', rolEmpleado.id.toString());
+    if (necesitaUsuario && roles.length > 0) {
+      let rolBuscado = null;
+      
+      if (isEmpleado) {
+        rolBuscado = roles.find(rol => 
+          rol.nombre.toUpperCase() === 'EMPLEADO' || 
+          rol.nombre.toUpperCase() === 'EMPLOYEE'
+        );
+      } else if (isAdmin) {
+        rolBuscado = roles.find(rol => 
+          rol.nombre.toUpperCase() === 'ADMIN' || 
+          rol.nombre.toUpperCase() === 'ADMINISTRADOR'
+        );
+      }
+      
+      if (rolBuscado && values.rolId !== rolBuscado.id.toString()) {
+        setFieldValue('rolId', rolBuscado.id.toString());
       }
     }
-  }, [isEmpleado, roles]);
+  }, [necesitaUsuario, isEmpleado, isAdmin, roles]);
 
-  // Limpiar campos de empleado cuando cambia el tipo de contacto
+  // Limpiar campos de usuario cuando cambia el tipo de contacto
   useEffect(() => {
-    if (!isEmpleado && values.rolId) {
+    if (!necesitaUsuario && values.rolId) {
       setFieldValue('rolId', '');
       setFieldValue('username', '');
       setFieldValue('password', '');
       setFieldValue('sucursalId', '');
     }
-  }, [isEmpleado]);
+  }, [necesitaUsuario]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -105,18 +117,18 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
       newErrors.email = 'El email no es válido';
     }
 
-    // Validaciones para empleado
-    if (isEmpleado) {
+    // Validaciones para empleado y admin (requieren usuario y contraseña)
+    if (necesitaUsuario) {
       if (!validators.required(values.username)) {
-        newErrors.username = 'El username es requerido para empleados';
+        newErrors.username = `El username es requerido para ${isAdmin ? 'administradores' : 'empleados'}`;
       }
       if (!validators.required(values.password)) {
-        newErrors.password = 'La contraseña es requerida para empleados';
+        newErrors.password = `La contraseña es requerida para ${isAdmin ? 'administradores' : 'empleados'}`;
       } else if (!validators.password(values.password)) {
         newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
       }
       if (!validators.required(values.sucursalId)) {
-        newErrors.sucursalId = 'La sucursal es requerida para empleados';
+        newErrors.sucursalId = `La sucursal es requerida para ${isAdmin ? 'administradores' : 'empleados'}`;
       }
     }
 
@@ -151,8 +163,8 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
         contactoData.nit = values.nit.trim() || null;
       }
 
-      // Agregar campos de empleado (crea usuario)
-      if (isEmpleado && values.rolId) {
+      // Agregar campos de usuario (crea usuario para empleados y administradores)
+      if (necesitaUsuario && values.rolId) {
         contactoData.rol = { id: parseInt(values.rolId) };
         contactoData.sucursal = { id: parseInt(values.sucursalId) };
         contactoData.username = values.username.trim();
@@ -302,8 +314,8 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
                 </>
               )}
 
-              {/* Campos de Empleado - Solo se muestran si es EMPLEADO */}
-              {isEmpleado && (
+              {/* Campos de Usuario - Solo se muestran si es EMPLEADO o ADMIN */}
+              {necesitaUsuario && (
                 <>
                   {/* Sucursal */}
                   <div className="flex flex-col gap-2 w-full">
