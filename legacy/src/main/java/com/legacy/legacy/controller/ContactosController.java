@@ -10,15 +10,21 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/contactos")
-@CrossOrigin(origins = "*")
 public class ContactosController {
     
     @Autowired
     private ContactosService contactosService;
     
     @GetMapping
-    public ResponseEntity<List<Contactos>> getAll() {
-        return ResponseEntity.ok(contactosService.findAll());
+    public ResponseEntity<?> getAll() {
+        try {
+            List<Contactos> contactos = contactosService.findAll();
+            return ResponseEntity.ok(contactos);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al obtener contactos: " + e.getMessage());
+        }
     }
     
     @GetMapping("/{id}")

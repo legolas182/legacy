@@ -1,5 +1,7 @@
 package com.legacy.legacy.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.legacy.legacy.model.enums.TipoContacto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -37,16 +39,19 @@ public class Contactos {
     
     @ManyToOne
     @JoinColumn(name = "rol_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Roles rol;
     
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Sucursal sucursal;
     
     // Campos para autenticación
     @Column(unique = true)
     private String username;
     
+    @JsonIgnore
     private String password;
     
     @Column(nullable = false)

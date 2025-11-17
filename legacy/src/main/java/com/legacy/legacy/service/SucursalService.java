@@ -27,22 +27,31 @@ public class SucursalService {
     
     /**
      * Obtiene el ID de la sucursal actual del contexto
-     * @return ID de la sucursal actual
-     * @throws RuntimeException si no hay sucursal configurada
+     * @return ID de la sucursal actual, o null si es admin (puede acceder a todas)
+     * @throws RuntimeException si no hay sucursal configurada y no es admin
      */
     public Integer getSucursalActualId() {
         Integer id = sucursalActual.get();
-        if (id == null) {
-            throw new RuntimeException("No hay sucursal configurada en el contexto. El usuario debe iniciar sesión.");
-        }
+        // null significa que es admin y puede acceder a todas las sucursales
         return id;
     }
     
     /**
+     * Verifica si el usuario actual es admin (sucursal null)
+     */
+    public boolean esAdmin() {
+        return sucursalActual.get() == null;
+    }
+    
+    /**
      * Obtiene la sucursal actual completa
+     * @return La sucursal actual, o null si es admin
      */
     public Sucursal getSucursalActual() {
         Integer id = getSucursalActualId();
+        if (id == null) {
+            return null; // Admin no tiene sucursal específica
+        }
         return sucursalRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Sucursal no encontrada"));
     }

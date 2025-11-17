@@ -25,6 +25,7 @@ public class ContactosServiceImpl implements ContactosService {
     private RolesRepository rolesRepository;
     
     @Override
+    @Transactional(readOnly = true)
     public List<Contactos> findAll() {
         return contactosRepository.findAll();
     }

@@ -45,13 +45,21 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Usuario inactivo");
         }
 
-        // Verificar que el usuario tenga sucursal asignada
-        if (contacto.getSucursal() == null) {
+        // Verificar si es admin - el admin no requiere sucursal asignada
+        boolean esAdmin = esAdmin(contacto);
+        
+        // Verificar que el usuario tenga sucursal asignada (excepto admin)
+        if (!esAdmin && contacto.getSucursal() == null) {
             throw new RuntimeException("Usuario no tiene sucursal asignada. Contacte al administrador.");
         }
 
-        // Establecer la sucursal en el contexto global
-        sucursalService.setSucursalActual(contacto.getSucursal().getId());
+        // Establecer la sucursal en el contexto global (null para admin)
+        if (contacto.getSucursal() != null) {
+            sucursalService.setSucursalActual(contacto.getSucursal().getId());
+        } else {
+            // Para admin, no establecemos sucursal (puede acceder a todas)
+            sucursalService.setSucursalActual(null);
+        }
 
         // Actualizar último acceso
         contacto.setUltimoAcceso(LocalDateTime.now());
@@ -121,6 +129,13 @@ public class AuthServiceImpl implements AuthService {
         // Token simple para desarrollo (en producción usar JWT)
         String tokenData = contacto.getId() + ":" + contacto.getUsername() + ":" + UUID.randomUUID();
         return Base64.getEncoder().encodeToString(tokenData.getBytes());
+    }
+    
+    /**
+     * Verifica si un contacto tiene rol de administrador
+     */
+    private boolean esAdmin(Contactos contacto) {
+        return contacto.getRol() != null && "ADMIN".equalsIgnoreCase(contacto.getRol().getNombre());
     }
 }
 
