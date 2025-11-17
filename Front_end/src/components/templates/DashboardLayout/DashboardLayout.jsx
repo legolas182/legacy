@@ -4,17 +4,17 @@ import Header from '../../organisms/Header/Header';
 
 const DashboardLayout = ({ children }) => {
   return (
-    <div className="dark min-h-screen bg-background-dark font-display flex">
+    <div className="dark h-screen bg-background-dark font-display flex overflow-hidden">
       {/* Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
+      <div className="flex-1 flex flex-col h-full lg:ml-0 overflow-hidden">
         {/* Header */}
         <Header />
 
         {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-5 lg:p-6 w-full">
+        <main className="flex-1 p-4 sm:p-5 lg:p-6 w-full overflow-y-auto">
           {children}
         </main>
       </div>
