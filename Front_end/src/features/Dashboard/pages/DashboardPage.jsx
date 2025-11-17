@@ -51,7 +51,7 @@ const DashboardPage = () => {
 
   return (
     <DashboardLayout>
-      <div className="w-full max-w-7xl mx-auto">
+      <div className="w-full">
             {/* Page Heading */}
             <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
               <div className="flex flex-col gap-1">
