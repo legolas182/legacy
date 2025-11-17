@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../../components/templates/DashboardLayout/DashboardLayout';
 import { contactosService } from '../../../services/contactosService/contactosService';
 import Spinner from '../../../components/atoms/Spinner/Spinner';
+import CreateContactoModal from '../components/CreateContactoModal/CreateContactoModal';
 
 const ContactosPage = () => {
   const [contactos, setContactos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadContactos();
@@ -58,7 +60,7 @@ const ContactosPage = () => {
             <p className="text-white/60 text-base font-normal">Gestión de contactos y usuarios.</p>
           </div>
           <button
-            onClick={() => alert('Funcionalidad de crear contacto próximamente')}
+            onClick={() => setIsModalOpen(true)}
             className="bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200"
           >
             <span className="material-symbols-outlined inline mr-2">add</span>
@@ -171,6 +173,16 @@ const ContactosPage = () => {
           </p>
         </div>
       </div>
+
+      {/* Modal de Crear Contacto */}
+      <CreateContactoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => {
+          loadContactos();
+          setIsModalOpen(false);
+        }}
+      />
     </DashboardLayout>
   );
 };
