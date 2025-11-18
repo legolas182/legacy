@@ -12,13 +12,12 @@ import Spinner from '../../../../components/atoms/Spinner/Spinner';
 const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
   const { values, errors, handleChange, handleReset, setFieldError, setErrors, setFieldValue } = useForm({
     nombre: '',
-    tipoContacto: 'CLIENTE',
+    rolId: '',
     email: '',
     telefono: '',
     direccion: '',
     empresa: '',
     nit: '',
-    rolId: '',
     sucursalId: '',
     username: '',
     password: '',
@@ -63,46 +62,26 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
     }
   };
 
+  // Obtener el rol seleccionado
+  const rolSeleccionado = roles.find(rol => rol.id.toString() === values.rolId);
+  const nombreRol = rolSeleccionado?.nombre?.toUpperCase() || '';
+
   // Determinar si necesita usuario y contraseña (EMPLEADO o ADMIN)
-  const necesitaUsuario = values.tipoContacto === 'EMPLEADO' || values.tipoContacto === 'ADMIN';
-  const isEmpleado = values.tipoContacto === 'EMPLEADO';
-  const isAdmin = values.tipoContacto === 'ADMIN';
+  const necesitaUsuario = nombreRol === 'EMPLEADO' || nombreRol === 'ADMIN';
+  const isEmpleado = nombreRol === 'EMPLEADO';
+  const isAdmin = nombreRol === 'ADMIN';
 
-  // Determinar qué campos mostrar según el tipo de contacto
-  const isProveedor = values.tipoContacto === 'PROVEEDOR';
+  // Determinar qué campos mostrar según el rol
+  const isProveedor = nombreRol === 'PROVEEDOR';
 
-  // Buscar y asignar el rol automáticamente según el tipo de contacto
+  // Limpiar campos de usuario cuando cambia el rol a uno que no necesita usuario
   useEffect(() => {
-    if (necesitaUsuario && roles.length > 0) {
-      let rolBuscado = null;
-      
-      if (isEmpleado) {
-        rolBuscado = roles.find(rol => 
-          rol.nombre.toUpperCase() === 'EMPLEADO' || 
-          rol.nombre.toUpperCase() === 'EMPLOYEE'
-        );
-      } else if (isAdmin) {
-        rolBuscado = roles.find(rol => 
-          rol.nombre.toUpperCase() === 'ADMIN' || 
-          rol.nombre.toUpperCase() === 'ADMINISTRADOR'
-        );
-      }
-      
-      if (rolBuscado && values.rolId !== rolBuscado.id.toString()) {
-        setFieldValue('rolId', rolBuscado.id.toString());
-      }
-    }
-  }, [necesitaUsuario, isEmpleado, isAdmin, roles]);
-
-  // Limpiar campos de usuario cuando cambia el tipo de contacto
-  useEffect(() => {
-    if (!necesitaUsuario && values.rolId) {
-      setFieldValue('rolId', '');
+    if (!necesitaUsuario && (values.username || values.password || values.sucursalId)) {
       setFieldValue('username', '');
       setFieldValue('password', '');
       setFieldValue('sucursalId', '');
     }
-  }, [necesitaUsuario]);
+  }, [necesitaUsuario, values.rolId]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -117,6 +96,11 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
       newErrors.email = 'El email no es válido';
     }
 
+    // Validar que se seleccione un rol
+    if (!validators.required(values.rolId)) {
+      newErrors.rolId = 'El rol es requerido';
+    }
+
     // Validaciones para empleado y admin (requieren usuario y contraseña)
     if (necesitaUsuario) {
       if (!validators.required(values.username)) {
@@ -127,8 +111,9 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
       } else if (!validators.password(values.password)) {
         newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
       }
-      if (!validators.required(values.sucursalId)) {
-        newErrors.sucursalId = `La sucursal es requerida para ${isAdmin ? 'administradores' : 'empleados'}`;
+      // La sucursal es requerida solo para empleados, no para administradores
+      if (!isAdmin && !validators.required(values.sucursalId)) {
+        newErrors.sucursalId = 'La sucursal es requerida para empleados';
       }
     }
 
@@ -150,7 +135,6 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
       // Datos básicos del contacto
       const contactoData = {
         nombre: values.nombre.trim(),
-        tipoContacto: values.tipoContacto,
         email: values.email.trim() || null,
         telefono: values.telefono.trim() || null,
         direccion: values.direccion.trim() || null,
@@ -163,10 +147,20 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
         contactoData.nit = values.nit.trim() || null;
       }
 
+      // Agregar rol (siempre requerido)
+      if (values.rolId) {
+        contactoData.rol = { id: parseInt(values.rolId) };
+      }
+
       // Agregar campos de usuario (crea usuario para empleados y administradores)
       if (necesitaUsuario && values.rolId) {
-        contactoData.rol = { id: parseInt(values.rolId) };
-        contactoData.sucursal = { id: parseInt(values.sucursalId) };
+        // Solo asignar sucursal si se proporciona (requerida para empleados, opcional para admin)
+        if (values.sucursalId) {
+          contactoData.sucursal = { id: parseInt(values.sucursalId) };
+        } else {
+          // Para admin, la sucursal puede ser null (pertenecen a todas)
+          contactoData.sucursal = null;
+        }
         contactoData.username = values.username.trim();
         contactoData.password = values.password.trim();
       }
@@ -234,28 +228,40 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
                 required
               />
 
-              {/* Tipo de Contacto */}
+              {/* Rol */}
               <div className="flex flex-col gap-2 w-full">
-                <label className="text-sm font-medium text-slate-300">Tipo de Contacto *</label>
-                <select
-                  name="tipoContacto"
-                  value={values.tipoContacto}
-                  onChange={(e) => {
-                    handleChange(e);
-                    // Si cambia a CLIENTE, limpiar campos de proveedor
-                    if (e.target.value === 'CLIENTE') {
-                      setFieldValue('empresa', '');
-                      setFieldValue('nit', '');
-                    }
-                  }}
-                  className="w-full pl-4 pr-4 py-3.5 bg-slate-800/60 border border-slate-600/50 rounded-lg text-slate-200 text-[15px] transition-all duration-300 outline-none focus:border-primary focus:bg-slate-800/80 focus:shadow-[0_0_0_3px_rgba(81,160,251,0.1)]"
-                  required
-                >
-                  <option value="CLIENTE">Cliente</option>
-                  <option value="PROVEEDOR">Proveedor</option>
-                  <option value="EMPLEADO">Empleado</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
+                <label className="text-sm font-medium text-slate-300">Rol *</label>
+                {loadingRoles ? (
+                  <div className="flex items-center justify-center py-3">
+                    <Spinner size="small" />
+                  </div>
+                ) : (
+                  <select
+                    name="rolId"
+                    value={values.rolId}
+                    onChange={(e) => {
+                      handleChange(e);
+                      // Si cambia a un rol que no es PROVEEDOR, limpiar campos de proveedor
+                      const rolSeleccionado = roles.find(r => r.id.toString() === e.target.value);
+                      if (rolSeleccionado?.nombre?.toUpperCase() !== 'PROVEEDOR') {
+                        setFieldValue('empresa', '');
+                        setFieldValue('nit', '');
+                      }
+                    }}
+                    className={`w-full pl-4 pr-4 py-3.5 bg-slate-800/60 border ${
+                      errors.rolId ? 'border-red-500' : 'border-slate-600/50'
+                    } rounded-lg text-slate-200 text-[15px] transition-all duration-300 outline-none focus:border-primary focus:bg-slate-800/80 focus:shadow-[0_0_0_3px_rgba(81,160,251,0.1)]`}
+                    required
+                  >
+                    <option value="">Seleccionar rol *</option>
+                    {roles.map((rol) => (
+                      <option key={rol.id} value={rol.id}>
+                        {rol.nombre}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                {errors.rolId && <span className="text-sm text-red-400 mt-1">{errors.rolId}</span>}
               </div>
 
               {/* Email */}
@@ -319,7 +325,9 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
                 <>
                   {/* Sucursal */}
                   <div className="flex flex-col gap-2 w-full">
-                    <label className="text-sm font-medium text-slate-300">Sucursal *</label>
+                    <label className="text-sm font-medium text-slate-300">
+                      Sucursal {isAdmin ? '(Opcional - Admin pertenece a todas)' : '*'}
+                    </label>
                     {loadingSucursales ? (
                       <div className="flex items-center justify-center py-3">
                         <Spinner size="small" />
@@ -332,9 +340,9 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
                         className={`w-full pl-4 pr-4 py-3.5 bg-slate-800/60 border ${
                           errors.sucursalId ? 'border-red-500' : 'border-slate-600/50'
                         } rounded-lg text-slate-200 text-[15px] transition-all duration-300 outline-none focus:border-primary focus:bg-slate-800/80 focus:shadow-[0_0_0_3px_rgba(81,160,251,0.1)]`}
-                        required
+                        required={!isAdmin}
                       >
-                        <option value="">Seleccionar sucursal *</option>
+                        <option value="">{isAdmin ? 'Sin sucursal (pertenece a todas)' : 'Seleccionar sucursal *'}</option>
                         {sucursales.map((sucursal) => (
                           <option key={sucursal.id} value={sucursal.id}>
                             {sucursal.nombre}
@@ -343,6 +351,11 @@ const CreateContactoModal = ({ isOpen, onClose, onSuccess }) => {
                       </select>
                     )}
                     {errors.sucursalId && <span className="text-sm text-red-400 mt-1">{errors.sucursalId}</span>}
+                    {isAdmin && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        Los administradores pertenecen a todas las sucursales. Puede dejar este campo vacío.
+                      </p>
+                    )}
                   </div>
 
                   {/* Username */}

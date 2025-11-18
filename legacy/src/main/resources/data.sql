@@ -1,16 +1,16 @@
 -- Script para insertar datos de prueba en la base de datos Legacy Pharmacy
 
--- Insertar rol por defecto si no existe
+-- Insertar roles por defecto si no existen
 INSERT IGNORE INTO roles (id, nombre) VALUES 
 (1, 'ADMIN'),
 (2, 'EMPLEADO'),
-(3, 'CLIENTE');
+(3, 'CLIENTE'),
+(4, 'PROVEEDOR');
 
 -- Insertar usuario de prueba
 -- Credenciales: admin / admin123
 INSERT INTO contactos (
     nombre, 
-    tipo_contacto, 
     email, 
     username, 
     password, 
@@ -20,7 +20,6 @@ INSERT INTO contactos (
     telefono
 ) VALUES (
     'Administrador del Sistema',
-    'CLIENTE',
     'admin@legacy.com',
     'admin',
     'admin123',
@@ -36,7 +35,6 @@ INSERT INTO contactos (
 -- Credenciales: empleado / empleado123
 INSERT INTO contactos (
     nombre, 
-    tipo_contacto, 
     email, 
     username, 
     password, 
@@ -46,7 +44,6 @@ INSERT INTO contactos (
     telefono
 ) VALUES (
     'Juan Pérez',
-    'CLIENTE',
     'juan.perez@legacy.com',
     'empleado',
     'empleado123',

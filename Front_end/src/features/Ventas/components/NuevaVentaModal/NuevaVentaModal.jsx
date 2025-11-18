@@ -4,6 +4,7 @@ import { productosService } from '../../../../services/productosService/producto
 import { metodosPagoService } from '../../../../services/metodosPagoService/metodosPagoService';
 import { ventasService } from '../../../../services/ventasService/ventasService';
 import { ventasDetalleService } from '../../../../services/ventasDetalleService/ventasDetalleService';
+import { rolesService } from '../../../../services/rolesService/rolesService';
 import Button from '../../../../components/atoms/Button/Button';
 import Input from '../../../../components/atoms/Input/Input';
 import Spinner from '../../../../components/atoms/Spinner/Spinner';
@@ -83,9 +84,9 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
         metodosPagoService.getAll(),
       ]);
 
-      // Filtrar solo clientes
+      // Filtrar solo clientes (contactos con rol CLIENTE)
       const clientesData = (clientesRes.data || []).filter(c => 
-        c.tipoContacto === 'CLIENTE' || !c.tipoContacto
+        c.rol?.nombre?.toUpperCase() === 'CLIENTE' || !c.rol
       );
       setClientes(clientesData);
       setProductos(productosRes.data || []);
@@ -244,9 +245,17 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
         } else {
           // Si no existe, intentar crear un cliente nuevo
           try {
+            // Buscar el rol CLIENTE
+            const rolesRes = await rolesService.getAll();
+            const rolCliente = rolesRes.data?.find(r => r.nombre?.toUpperCase() === 'CLIENTE');
+            
+            if (!rolCliente) {
+              throw new Error('No se encontró el rol CLIENTE');
+            }
+            
             const nuevoCliente = {
               nombre: nombreCliente.trim(),
-              tipoContacto: 'CLIENTE',
+              rol: { id: rolCliente.id },
               activo: true,
             };
             const clienteResponse = await contactosService.create(nuevoCliente);

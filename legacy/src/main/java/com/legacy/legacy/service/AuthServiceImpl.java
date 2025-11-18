@@ -2,7 +2,6 @@ package com.legacy.legacy.service;
 
 import com.legacy.legacy.dto.*;
 import com.legacy.legacy.model.Contactos;
-import com.legacy.legacy.model.enums.TipoContacto;
 import com.legacy.legacy.repository.ContactosRepository;
 import com.legacy.legacy.repository.RolesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,12 +101,11 @@ public class AuthServiceImpl implements AuthService {
         nuevoContacto.setUsername(request.getUsername());
         nuevoContacto.setEmail(request.getEmail());
         nuevoContacto.setPassword(request.getPassword()); // En producción usar BCrypt
-        nuevoContacto.setTipoContacto(TipoContacto.CLIENTE);
         nuevoContacto.setActivo(true);
         nuevoContacto.setFechaCreacion(LocalDateTime.now());
 
-        // Asignar rol por defecto
-        rolesRepository.findById(1).ifPresent(nuevoContacto::setRol);
+        // Asignar rol CLIENTE por defecto (ID 3 según data.sql)
+        rolesRepository.findById(3).ifPresent(nuevoContacto::setRol);
 
         Contactos contactoGuardado = contactosRepository.save(nuevoContacto);
 

@@ -2,7 +2,6 @@ package com.legacy.legacy.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.legacy.legacy.model.enums.TipoContacto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,6 +13,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@org.hibernate.annotations.DynamicUpdate
 public class Contactos {
     
     @Id
@@ -22,10 +22,6 @@ public class Contactos {
     
     @Column(nullable = false)
     private String nombre;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo_contacto", nullable = false)
-    private TipoContacto tipoContacto;
     
     private String email;
     
