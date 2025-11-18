@@ -576,32 +576,6 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
                                 </tr>
                               ))}
                             </tbody>
-                            <tfoot className="bg-[#2d4a5c]">
-                              <tr>
-                                <td colSpan="3" className="px-4 py-4 text-right text-sm font-medium text-white/70">
-                                  SUBTOTAL:
-                                </td>
-                                <td colSpan="2" className="px-4 py-4 text-left text-base font-semibold text-white/90">
-                                  ${calcularSubtotal().toFixed(2)}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td colSpan="3" className="px-4 py-4 text-right text-sm font-medium text-white/70">
-                                  IVA (sobre venta total):
-                                </td>
-                                <td colSpan="2" className="px-4 py-4 text-left text-base font-semibold text-white/90">
-                                  ${calcularIvaTotal().toFixed(2)}
-                                </td>
-                              </tr>
-                              <tr className="border-t border-white/20">
-                                <td colSpan="3" className="px-4 py-4 text-right text-base font-semibold text-white/70">
-                                  TOTAL:
-                                </td>
-                                <td colSpan="2" className="px-4 py-4 text-left text-xl font-bold text-white">
-                                  ${calcularTotal().toFixed(2)}
-                                </td>
-                              </tr>
-                            </tfoot>
                           </table>
                         </div>
                       </div>
@@ -642,22 +616,34 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
               Cancelar
             </Button>
             <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                // Función para imprimir factura
+                window.print();
+              }}
+              disabled={submitting || productosVenta.length === 0}
+              className="min-w-[160px] flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-outlined text-lg text-primary">print</span>
+              <span className="text-primary">Imprimir Factura</span>
+            </Button>
+            <Button
               type="submit"
+              variant="secondary"
               onClick={handleSubmit}
               disabled={submitting || productosVenta.length === 0}
-              className="min-w-[150px]"
+              className="min-w-[160px] flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <>
-                  <span className="inline-flex items-center mr-2">
-                    <Spinner size="small" />
-                  </span>
-                  Guardando...
+                  <Spinner size="small" />
+                  <span className="text-primary">Guardando...</span>
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined mr-2">save</span>
-                  Guardar Venta
+                  <span className="material-symbols-outlined text-lg text-primary">save</span>
+                  <span className="text-primary">Guardar Venta</span>
                 </>
               )}
             </Button>
