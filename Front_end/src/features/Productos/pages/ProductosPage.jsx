@@ -6,6 +6,7 @@ import { laboratoriosService } from '../../../services/laboratoriosService/labor
 import Button from '../../../components/atoms/Button/Button';
 import Input from '../../../components/atoms/Input/Input';
 import Spinner from '../../../components/atoms/Spinner/Spinner';
+import EditProductoModal from '../components/EditProductoModal/EditProductoModal';
 
 const ProductosPage = () => {
   const [productos, setProductos] = useState([]);
@@ -24,6 +25,10 @@ const ProductosPage = () => {
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const itemsPorPagina = 5;
+
+  // Modal de edición
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedProductoId, setSelectedProductoId] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -178,14 +183,6 @@ const ProductosPage = () => {
     return Math.floor(Math.random() * 300);
   };
 
-  // Obtener precio unitario (simulado - ajustar según estructura real)
-  const obtenerPrecio = (producto) => {
-    if (producto.precio !== undefined) return producto.precio;
-    if (producto.precioUnitario !== undefined) return producto.precioUnitario;
-    if (producto.precioVenta !== undefined) return producto.precioVenta;
-    // Simulación: generar un precio aleatorio para demostración
-    return (Math.random() * 50 + 1).toFixed(2);
-  };
 
   if (loading) {
     return (
@@ -316,9 +313,6 @@ const ProductosPage = () => {
                     STOCK
                   </th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    PRECIO UNIT.
-                  </th>
-                  <th className="px-4 py-2.5 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                     VALOR COMPRA
                   </th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
@@ -328,7 +322,7 @@ const ProductosPage = () => {
                     UTILIDAD
                   </th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    IVA
+                    % IVA
                   </th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                     REQUIERE FÓRMULA
@@ -341,7 +335,7 @@ const ProductosPage = () => {
               <tbody className="divide-y divide-white/10">
                 {productosPaginados.length === 0 ? (
                   <tr>
-                    <td colSpan="13" className="px-4 py-6 text-center text-white/60">
+                    <td colSpan="12" className="px-4 py-6 text-center text-white/60">
                       {busqueda || categoriaFiltro !== 'Todos' || laboratorioFiltro !== 'Todos' || soloConStock
                         ? 'No se encontraron productos que coincidan con los filtros'
                         : 'No se encontraron productos'}
@@ -350,17 +344,19 @@ const ProductosPage = () => {
                 ) : (
                   productosPaginados.map((producto) => {
                     const stock = obtenerStock(producto);
-                    const precio = obtenerPrecio(producto);
                     
                     // Obtener valores de compra y venta
                     const valorCompra = producto.valorCompra || producto.valor_compra || null;
                     const valorVenta = producto.valorVenta || producto.valor_venta || null;
                     
-                    // Calcular utilidad e IVA si están disponibles
+                    // Calcular utilidad si está disponible
                     const utilidad = producto.utilidad !== undefined ? producto.utilidad : 
                                     (valorVenta && valorCompra ? valorVenta - valorCompra : null);
-                    const iva = producto.iva !== undefined ? producto.iva : 
-                               (valorVenta ? valorVenta * 0.19 : null);
+                    
+                    // Obtener porcentaje de IVA
+                    const porcentajeIva = producto.porcentajeIva !== undefined ? producto.porcentajeIva : 
+                                         (producto.porcentaje_iva !== undefined ? producto.porcentaje_iva : 
+                                          (producto.iva !== undefined ? producto.iva : null));
                     
                     return (
                       <tr key={producto.id} className="hover:bg-white/5 transition-colors">
@@ -383,9 +379,6 @@ const ProductosPage = () => {
                           {stock} Uds.
                         </td>
                         <td className="px-4 py-3 text-sm text-white/90 font-semibold">
-                          ${typeof precio === 'number' ? precio.toFixed(2) : precio}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-white/90 font-semibold">
                           {valorCompra !== null ? `$${Number(valorCompra).toFixed(2)}` : '-'}
                         </td>
                         <td className="px-4 py-3 text-sm text-white/90 font-semibold">
@@ -397,7 +390,7 @@ const ProductosPage = () => {
                           {utilidad !== null ? `$${Number(utilidad).toFixed(2)}` : '-'}
                         </td>
                         <td className="px-4 py-3 text-sm text-white/90 font-semibold">
-                          {iva !== null ? `$${Number(iva).toFixed(2)}` : '-'}
+                          {porcentajeIva !== null ? `${Number(porcentajeIva).toFixed(2)}%` : '-'}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <span
@@ -419,7 +412,10 @@ const ProductosPage = () => {
                             <span className="material-symbols-outlined">visibility</span>
                           </button>
                           <button
-                            onClick={() => alert(`Editar producto #${producto.id} - Funcionalidad próximamente`)}
+                            onClick={() => {
+                              setSelectedProductoId(producto.id);
+                              setIsEditModalOpen(true);
+                            }}
                             className="text-blue-400 hover:text-blue-300 mr-4 transition-colors"
                             title="Editar"
                           >
@@ -491,6 +487,19 @@ const ProductosPage = () => {
             </div>
           </div>
         )}
+
+        {/* Modal de Edición */}
+        <EditProductoModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedProductoId(null);
+          }}
+          onSuccess={() => {
+            loadData();
+          }}
+          productoId={selectedProductoId}
+        />
       </div>
     </DashboardLayout>
   );

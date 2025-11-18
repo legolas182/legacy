@@ -50,13 +50,10 @@ public class ProductosServiceImpl implements ProductosService {
             productos.setUtilidad(null);
         }
         
-        // Calcular IVA: valorVenta * 0.19 (19% IVA en Colombia)
-        if (productos.getValorVenta() != null) {
-            BigDecimal porcentajeIVA = new BigDecimal("0.19");
-            BigDecimal iva = productos.getValorVenta().multiply(porcentajeIVA);
-            productos.setIva(iva.setScale(2, RoundingMode.HALF_UP));
-        } else {
-            productos.setIva(null);
+        // El porcentaje de IVA es editable, no se calcula automáticamente
+        // Si no se proporciona, se establece un valor por defecto de 19%
+        if (productos.getPorcentajeIva() == null) {
+            productos.setPorcentajeIva(new BigDecimal("19.00"));
         }
     }
     

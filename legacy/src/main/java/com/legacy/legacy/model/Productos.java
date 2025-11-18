@@ -51,7 +51,7 @@ public class Productos {
     @Column(name = "utilidad", precision = 10, scale = 2)
     private BigDecimal utilidad;
     
-    @Column(name = "iva", precision = 10, scale = 2)
-    private BigDecimal iva;
+    @Column(name = "porcentaje_iva", precision = 5, scale = 2)
+    private BigDecimal porcentajeIva;
 }
 

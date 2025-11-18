@@ -117,23 +117,33 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
     setMostrarSugerenciasCliente(false);
   };
 
+
   const agregarProducto = (producto) => {
     // Verificar si el producto ya está en la lista
     const existe = productosVenta.find(p => p.producto.id === producto.id);
+    // Usar el precio de venta (valorVenta) del producto
+    const precioVenta = parseFloat(producto.valorVenta || producto.valor_venta || producto.precioVenta || producto.precio || 0);
+    const porcentajeIva = parseFloat(producto.porcentajeIva || producto.porcentaje_iva || 19.00);
+    
     if (existe) {
       // Si existe, aumentar la cantidad
+      const nuevaCantidad = existe.cantidad + 1;
+      const nuevoSubtotal = nuevaCantidad * precioVenta;
       setProductosVenta(productosVenta.map(p => 
         p.producto.id === producto.id 
-          ? { ...p, cantidad: p.cantidad + 1, subtotal: (p.cantidad + 1) * p.precioUnitario }
+          ? { ...p, cantidad: nuevaCantidad, subtotal: nuevoSubtotal }
           : p
       ));
     } else {
       // Si no existe, agregarlo
+      const cantidad = 1;
+      const subtotal = cantidad * precioVenta;
       const nuevoProducto = {
         producto: producto,
-        cantidad: 1,
-        precioUnitario: parseFloat(producto.precioVenta || producto.precio || 0),
-        subtotal: parseFloat(producto.precioVenta || producto.precio || 0),
+        cantidad: cantidad,
+        precioUnitario: precioVenta, // Precio de venta del producto
+        subtotal: subtotal,
+        porcentajeIva: porcentajeIva,
       };
       setProductosVenta([...productosVenta, nuevoProducto]);
     }
@@ -147,24 +157,53 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
 
   const actualizarCantidad = (index, nuevaCantidad) => {
     if (nuevaCantidad < 1) return;
-    setProductosVenta(productosVenta.map((p, i) => 
-      i === index 
-        ? { ...p, cantidad: nuevaCantidad, subtotal: nuevaCantidad * p.precioUnitario }
-        : p
-    ));
+    setProductosVenta(productosVenta.map((p, i) => {
+      if (i === index) {
+        const nuevoSubtotal = nuevaCantidad * p.precioUnitario;
+        return { ...p, cantidad: nuevaCantidad, subtotal: nuevoSubtotal };
+      }
+      return p;
+    }));
   };
 
   const actualizarPrecio = (index, nuevoPrecio) => {
     if (nuevoPrecio < 0) return;
-    setProductosVenta(productosVenta.map((p, i) => 
-      i === index 
-        ? { ...p, precioUnitario: nuevoPrecio, subtotal: p.cantidad * nuevoPrecio }
-        : p
-    ));
+    setProductosVenta(productosVenta.map((p, i) => {
+      if (i === index) {
+        const nuevoSubtotal = p.cantidad * nuevoPrecio;
+        return { ...p, precioUnitario: nuevoPrecio, subtotal: nuevoSubtotal };
+      }
+      return p;
+    }));
+  };
+
+  const calcularSubtotal = () => {
+    return productosVenta.reduce((sum, p) => sum + p.subtotal, 0);
+  };
+
+  const calcularIvaTotal = () => {
+    // Calcular el IVA sobre el total de la venta (subtotal total)
+    const subtotalTotal = calcularSubtotal();
+    
+    // Calcular el porcentaje promedio de IVA basado en los productos
+    // Ponderado por el subtotal de cada producto
+    if (productosVenta.length === 0 || subtotalTotal === 0) {
+      return 0;
+    }
+    
+    let ivaPonderado = 0;
+    productosVenta.forEach(p => {
+      const porcentaje = p.porcentajeIva || 19.00;
+      const peso = p.subtotal / subtotalTotal;
+      ivaPonderado += porcentaje * peso;
+    });
+    
+    // Calcular IVA sobre el total de la venta
+    return (subtotalTotal * ivaPonderado) / 100;
   };
 
   const calcularTotal = () => {
-    return productosVenta.reduce((sum, p) => sum + p.subtotal, 0);
+    return calcularSubtotal() + calcularIvaTotal();
   };
 
   const handleSubmit = async (e) => {
@@ -287,10 +326,17 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#1e2a3a] rounded-lg border border-white/10 w-full max-w-6xl max-h-[90vh] overflow-hidden mx-4 shadow-2xl flex flex-col">
+      <div className="bg-[#1e2a3a] rounded-lg border border-white/10 w-full max-w-7xl max-h-[95vh] overflow-hidden mx-4 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="sticky top-0 bg-[#1e2a3a] border-b border-white/10 p-6 flex justify-between items-center z-10">
-          <h2 className="text-white text-2xl font-bold">Nueva Venta</h2>
+          <div>
+            <h2 className="text-white text-2xl font-bold">Nueva Venta</h2>
+            {productosVenta.length > 0 && (
+              <p className="text-white/60 text-sm mt-1">
+                {productosVenta.length} {productosVenta.length === 1 ? 'producto agregado' : 'productos agregados'}
+              </p>
+            )}
+          </div>
           <button
             onClick={handleClose}
             disabled={submitting}
@@ -300,252 +346,289 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Content - Layout de 2 columnas */}
+        <div className="flex-1 overflow-hidden flex">
           {loading ? (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center h-full w-full">
               <Spinner />
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
               {/* Error Message */}
               {error && (
-                <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
+                <div className="mx-6 mt-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
                   {error}
                 </div>
               )}
 
-              {/* Información básica */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Cliente */}
-                <div className="flex flex-col gap-2 relative">
-                  <label className="text-sm font-medium text-slate-300">
-                    Cliente *
-                  </label>
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      placeholder="Ingrese el nombre del cliente"
-                      value={nombreCliente}
-                      onChange={(e) => {
-                        setNombreCliente(e.target.value);
-                        setClienteId(null);
-                      }}
-                      onFocus={() => {
-                        if (nombreCliente) {
-                          setMostrarSugerenciasCliente(true);
-                        }
-                      }}
-                      required
-                    />
-                    {mostrarSugerenciasCliente && clientesFiltrados.length > 0 && (
-                      <div className="absolute z-20 w-full mt-1 bg-[#182535] border border-white/10 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {clientesFiltrados.map((cliente) => (
-                          <button
-                            key={cliente.id}
-                            type="button"
-                            onClick={() => seleccionarCliente(cliente)}
-                            className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
-                          >
-                            <div className="text-white font-medium">{cliente.nombre}</div>
-                            {cliente.email && (
-                              <div className="text-sm text-slate-400">{cliente.email}</div>
-                            )}
-                          </button>
+              <div className="flex-1 flex overflow-hidden">
+                {/* Columna izquierda - Información de la venta y búsqueda */}
+                <div className="w-1/3 border-r border-white/10 p-6 overflow-y-auto flex flex-col gap-6">
+                  {/* Información básica */}
+                  <div className="space-y-4">
+                    <h3 className="text-white text-lg font-semibold">Información de la Venta</h3>
+                    
+                    {/* Cliente */}
+                    <div className="flex flex-col gap-2 relative">
+                      <label className="text-sm font-medium text-slate-300">
+                        Cliente *
+                      </label>
+                      <div className="relative">
+                        <Input
+                          type="text"
+                          placeholder="Ingrese el nombre del cliente"
+                          value={nombreCliente}
+                          onChange={(e) => {
+                            setNombreCliente(e.target.value);
+                            setClienteId(null);
+                          }}
+                          onFocus={() => {
+                            if (nombreCliente) {
+                              setMostrarSugerenciasCliente(true);
+                            }
+                          }}
+                          required
+                        />
+                        {mostrarSugerenciasCliente && clientesFiltrados.length > 0 && (
+                          <div className="absolute z-20 w-full mt-1 bg-[#182535] border border-white/10 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            {clientesFiltrados.map((cliente) => (
+                              <button
+                                key={cliente.id}
+                                type="button"
+                                onClick={() => seleccionarCliente(cliente)}
+                                className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                              >
+                                <div className="text-white font-medium">{cliente.nombre}</div>
+                                {cliente.email && (
+                                  <div className="text-sm text-slate-400">{cliente.email}</div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Método de Pago */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-slate-300">
+                        Método de Pago
+                      </label>
+                      <select
+                        value={metodoPagoId}
+                        onChange={(e) => setMetodoPagoId(e.target.value)}
+                        className="w-full pl-4 pr-4 py-3.5 bg-slate-800/60 border border-slate-600/50 rounded-lg text-slate-200 text-[15px] transition-all duration-300 outline-none focus:border-primary focus:bg-slate-800/80 focus:shadow-[0_0_0_3px_rgba(81,160,251,0.1)]"
+                      >
+                        <option value="">Seleccionar método de pago</option>
+                        {metodosPago.map((metodo) => (
+                          <option key={metodo.id} value={metodo.id}>
+                            {metodo.nombre}
+                          </option>
                         ))}
+                      </select>
+                    </div>
+
+                    {/* Fórmula médica */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="requiereFormula"
+                          checked={requiereFormula}
+                          onChange={(e) => {
+                            setRequiereFormula(e.target.checked);
+                            if (!e.target.checked) setNumeroFormula('');
+                          }}
+                          className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-primary focus:ring-2 focus:ring-primary/50 cursor-pointer"
+                        />
+                        <label htmlFor="requiereFormula" className="text-sm font-medium text-slate-300 cursor-pointer">
+                          Requiere fórmula médica
+                        </label>
+                      </div>
+                      {requiereFormula && (
+                        <Input
+                          type="text"
+                          placeholder="Número de fórmula"
+                          value={numeroFormula}
+                          onChange={(e) => setNumeroFormula(e.target.value)}
+                          required={requiereFormula}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Búsqueda de productos */}
+                  <div className="space-y-3">
+                    <h3 className="text-white text-lg font-semibold">Agregar Productos</h3>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Buscar por nombre o código..."
+                        value={busquedaProducto}
+                        onChange={(e) => setBusquedaProducto(e.target.value)}
+                        icon={<span className="material-symbols-outlined text-lg">search</span>}
+                        autoFocus
+                      />
+                      {productosFiltrados.length > 0 && (
+                        <div className="absolute z-20 w-full mt-1 bg-[#182535] border border-white/10 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                          {productosFiltrados.map((producto) => (
+                            <button
+                              key={producto.id}
+                              type="button"
+                              onClick={() => agregarProducto(producto)}
+                              className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="text-white font-medium">{producto.nombre}</div>
+                                  {producto.concentracion && (
+                                    <div className="text-sm text-slate-400">{producto.concentracion}</div>
+                                  )}
+                                  {(producto.codigoBarras || producto.codigo || producto.id) && (
+                                    <div className="text-xs text-slate-500 mt-1">
+                                      Código: {producto.codigoBarras || producto.codigo || `#${producto.id}`}
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="ml-3 text-primary font-semibold text-sm">
+                                  ${parseFloat(producto.valorVenta || producto.valor_venta || producto.precioVenta || producto.precio || 0).toFixed(2)}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {busquedaProducto && productosFiltrados.length === 0 && (
+                      <div className="text-center py-4 text-white/60 text-sm">
+                        No se encontraron productos
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Método de Pago */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-slate-300">
-                    Método de Pago
-                  </label>
-                  <select
-                    value={metodoPagoId}
-                    onChange={(e) => setMetodoPagoId(e.target.value)}
-                    className="w-full pl-4 pr-4 py-3.5 bg-slate-800/60 border border-slate-600/50 rounded-lg text-slate-200 text-[15px] transition-all duration-300 outline-none focus:border-primary focus:bg-slate-800/80 focus:shadow-[0_0_0_3px_rgba(81,160,251,0.1)]"
-                  >
-                    <option value="">Seleccionar método de pago</option>
-                    {metodosPago.map((metodo) => (
-                      <option key={metodo.id} value={metodo.id}>
-                        {metodo.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Fórmula médica */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="requiereFormula"
-                    checked={requiereFormula}
-                    onChange={(e) => {
-                      setRequiereFormula(e.target.checked);
-                      if (!e.target.checked) setNumeroFormula('');
-                    }}
-                    className="w-5 h-5 rounded border-slate-600 bg-slate-800 text-primary focus:ring-2 focus:ring-primary/50 cursor-pointer"
-                  />
-                  <label htmlFor="requiereFormula" className="text-sm font-medium text-slate-300 cursor-pointer">
-                    Requiere fórmula médica
-                  </label>
-                </div>
-                {requiereFormula && (
-                  <Input
-                    type="text"
-                    placeholder="Número de fórmula"
-                    value={numeroFormula}
-                    onChange={(e) => setNumeroFormula(e.target.value)}
-                    required={requiereFormula}
-                  />
-                )}
-              </div>
-
-              {/* Agregar productos */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium text-slate-300">
-                  Buscar Productos
-                </label>
-                <div className="relative">
-                  <Input
-                    type="text"
-                    placeholder="Buscar por nombre o código de barras..."
-                    value={busquedaProducto}
-                    onChange={(e) => setBusquedaProducto(e.target.value)}
-                    icon={<span className="material-symbols-outlined text-lg">search</span>}
-                  />
-                  {productosFiltrados.length > 0 && (
-                    <div className="absolute z-20 w-full mt-1 bg-[#182535] border border-white/10 rounded-lg shadow-lg max-h-80 overflow-y-auto">
-                      {productosFiltrados.map((producto) => (
-                        <button
-                          key={producto.id}
-                          type="button"
-                          onClick={() => agregarProducto(producto)}
-                          className="w-full px-4 py-3 text-left hover:bg-white/5 transition-colors border-b border-white/5 last:border-b-0"
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="text-white font-medium">{producto.nombre}</div>
-                              {producto.concentracion && (
-                                <div className="text-sm text-slate-400">{producto.concentracion}</div>
-                              )}
-                              {(producto.codigoBarras || producto.codigo || producto.id) && (
-                                <div className="text-xs text-slate-500 mt-1">
-                                  Código: {producto.codigoBarras || producto.codigo || `#${producto.id}`}
-                                </div>
-                              )}
-                            </div>
-                            <div className="ml-3 text-primary font-semibold text-sm">
-                              ${parseFloat(producto.precioVenta || producto.precio || 0).toFixed(2)}
-                            </div>
-                          </div>
-                        </button>
-                      ))}
+                {/* Columna derecha - Lista de productos */}
+                <div className="flex-1 p-6 overflow-y-auto flex flex-col">
+                  {productosVenta.length === 0 ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="text-center">
+                        <span className="material-symbols-outlined text-6xl text-white/20 mb-4">shopping_cart</span>
+                        <p className="text-white/60 text-lg">No hay productos agregados</p>
+                        <p className="text-white/40 text-sm mt-2">Busca y agrega productos para comenzar la venta</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <h3 className="text-white text-lg font-semibold">Productos en la Venta</h3>
+                      <div className="bg-[#182535] rounded-lg border border-white/10 overflow-hidden">
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead className="bg-[#2d4a5c]">
+                              <tr>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase">Producto</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-white/70 uppercase">Cantidad</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase">Precio Unit.</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-white/70 uppercase">Subtotal</th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-white/70 uppercase">Acción</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/10">
+                              {productosVenta.map((item, index) => (
+                                <tr key={index} className="hover:bg-white/5">
+                                  <td className="px-4 py-3">
+                                    <div className="text-sm text-white/90 font-medium">{item.producto.nombre}</div>
+                                    {item.producto.concentracion && (
+                                      <div className="text-xs text-slate-400 mt-1">{item.producto.concentracion}</div>
+                                    )}
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      value={item.cantidad}
+                                      onChange={(e) => actualizarCantidad(index, parseInt(e.target.value) || 1)}
+                                      className="w-20 px-2 py-1.5 bg-slate-800/60 border border-slate-600/50 rounded text-slate-200 text-sm text-center focus:outline-none focus:border-primary"
+                                    />
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      step="0.01"
+                                      value={item.precioUnitario}
+                                      onChange={(e) => actualizarPrecio(index, parseFloat(e.target.value) || 0)}
+                                      className="w-28 px-2 py-1.5 bg-slate-800/60 border border-slate-600/50 rounded text-slate-200 text-sm focus:outline-none focus:border-primary"
+                                    />
+                                  </td>
+                                  <td className="px-4 py-3 text-sm text-white/90 font-semibold">
+                                    ${item.subtotal.toFixed(2)}
+                                  </td>
+                                  <td className="px-4 py-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => eliminarProducto(index)}
+                                      className="text-red-400 hover:text-red-300 transition-colors p-1 rounded hover:bg-red-500/10"
+                                      title="Eliminar producto"
+                                    >
+                                      <span className="material-symbols-outlined text-lg">delete</span>
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-[#2d4a5c]">
+                              <tr>
+                                <td colSpan="3" className="px-4 py-4 text-right text-sm font-medium text-white/70">
+                                  SUBTOTAL:
+                                </td>
+                                <td colSpan="2" className="px-4 py-4 text-left text-base font-semibold text-white/90">
+                                  ${calcularSubtotal().toFixed(2)}
+                                </td>
+                              </tr>
+                              <tr>
+                                <td colSpan="3" className="px-4 py-4 text-right text-sm font-medium text-white/70">
+                                  IVA (sobre venta total):
+                                </td>
+                                <td colSpan="2" className="px-4 py-4 text-left text-base font-semibold text-white/90">
+                                  ${calcularIvaTotal().toFixed(2)}
+                                </td>
+                              </tr>
+                              <tr className="border-t border-white/20">
+                                <td colSpan="3" className="px-4 py-4 text-right text-base font-semibold text-white/70">
+                                  TOTAL:
+                                </td>
+                                <td colSpan="2" className="px-4 py-4 text-left text-xl font-bold text-white">
+                                  ${calcularTotal().toFixed(2)}
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
-                {busquedaProducto && productosFiltrados.length === 0 && (
-                  <div className="text-center py-4 text-white/60 text-sm">
-                    No se encontraron productos
-                  </div>
-                )}
               </div>
-
-              {/* Lista de productos */}
-              {productosVenta.length > 0 && (
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-slate-300">
-                    Productos en la venta
-                  </label>
-                  <div className="bg-[#182535] rounded-lg border border-white/10 overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead className="bg-[#2d4a5c]">
-                          <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-white/70 uppercase">Producto</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-white/70 uppercase">Cantidad</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-white/70 uppercase">Precio Unit.</th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-white/70 uppercase">Subtotal</th>
-                            <th className="px-4 py-2 text-right text-xs font-medium text-white/70 uppercase">Acción</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/10">
-                          {productosVenta.map((item, index) => (
-                            <tr key={index} className="hover:bg-white/5">
-                              <td className="px-4 py-3 text-sm text-white/90">
-                                {item.producto.nombre}
-                                {item.producto.concentracion && (
-                                  <div className="text-xs text-slate-400">{item.producto.concentracion}</div>
-                                )}
-                              </td>
-                              <td className="px-4 py-3">
-                                <input
-                                  type="number"
-                                  min="1"
-                                  value={item.cantidad}
-                                  onChange={(e) => actualizarCantidad(index, parseInt(e.target.value) || 1)}
-                                  className="w-20 px-2 py-1 bg-slate-800/60 border border-slate-600/50 rounded text-slate-200 text-sm"
-                                />
-                              </td>
-                              <td className="px-4 py-3">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  value={item.precioUnitario}
-                                  onChange={(e) => actualizarPrecio(index, parseFloat(e.target.value) || 0)}
-                                  className="w-24 px-2 py-1 bg-slate-800/60 border border-slate-600/50 rounded text-slate-200 text-sm"
-                                />
-                              </td>
-                              <td className="px-4 py-3 text-sm text-white/90 font-semibold">
-                                ${item.subtotal.toFixed(2)}
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                <button
-                                  type="button"
-                                  onClick={() => eliminarProducto(index)}
-                                  className="text-red-400 hover:text-red-300 transition-colors"
-                                >
-                                  <span className="material-symbols-outlined">delete</span>
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot className="bg-[#2d4a5c]">
-                          <tr>
-                            <td colSpan="3" className="px-4 py-3 text-right text-sm font-medium text-white/70">
-                              TOTAL:
-                            </td>
-                            <td colSpan="2" className="px-4 py-3 text-left text-lg font-bold text-white">
-                              ${calcularTotal().toFixed(2)}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              )}
             </form>
           )}
         </div>
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-[#1e2a3a] border-t border-white/10 p-6 flex justify-between items-center">
-          <div className="flex flex-col">
-            <div className="text-white/60 text-sm">Total de la venta</div>
-            <div className="text-white font-bold text-2xl">
-              ${calcularTotal().toFixed(2)}
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col">
+              <div className="text-white/60 text-sm">Total de la venta</div>
+              <div className="text-white font-bold text-3xl">
+                ${calcularTotal().toFixed(2)}
+              </div>
             </div>
             {productosVenta.length > 0 && (
-              <div className="text-white/40 text-xs mt-1">
-                {productosVenta.length} {productosVenta.length === 1 ? 'producto' : 'productos'}
+              <div className="flex flex-col border-l border-white/10 pl-6">
+                <div className="text-white/60 text-sm">Subtotal</div>
+                <div className="text-white/90 font-semibold text-lg">
+                  ${calcularSubtotal().toFixed(2)}
+                </div>
+                <div className="text-white/60 text-xs mt-1">IVA: ${calcularIvaTotal().toFixed(2)}</div>
               </div>
             )}
           </div>
@@ -562,6 +645,7 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
               type="submit"
               onClick={handleSubmit}
               disabled={submitting || productosVenta.length === 0}
+              className="min-w-[150px]"
             >
               {submitting ? (
                 <>
@@ -571,7 +655,10 @@ const NuevaVentaModal = ({ isOpen, onClose, onSuccess }) => {
                   Guardando...
                 </>
               ) : (
-                'Guardar Venta'
+                <>
+                  <span className="material-symbols-outlined mr-2">save</span>
+                  Guardar Venta
+                </>
               )}
             </Button>
           </div>
